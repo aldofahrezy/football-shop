@@ -88,6 +88,7 @@ Sumber:
 
 Tugas 3 ini masih terbilang cukup singkat. 
 - Saya memulai dengan mengimplementasikan template base.html dan menambahkan path nya ke settings.py
+- Kemudian, saya memodifikasi file main.html untuk mengimplementasikan template base.html tersebut.
 - Karena model Product saya belum memiliki atribut id, saya melanjutkan dengan memodifikasi model saya agar memiliki kolom UUID yang digenerate secara otomatis secara default, melakukan makemigrations, dan migrate. 
 - Sealnjutnya, saya membuat fungsi-fungsi baru pada views.py (create_product, show_product, show_xml, show_json, show_xml_by_id, show_json_by_id) dan melakukan routing pada urls.py di aplikasi main. 
 - Saat mendefinisikan fungsi-fungsi pada views.py, saya mereturn renderan beberapa template html yang belum saya buat sehingga saya melanjutkan development dengan membuat template create_product.html dan product_details.html
