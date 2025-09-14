@@ -40,3 +40,10 @@ class Product(models.Model):
     def increment_views(self):
         self.product_views += 1
         self.save()
+
+class Employee(models.Model):
+    
+    # Attributes
+    name = models.CharField(max_length=255)
+    age = models.PositiveIntegerField()
+    persona = models.TextField()

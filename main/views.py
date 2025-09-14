@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.core import serializers
 from main.forms import ProductForm
-from main.models import Product
+from main.models import Product, Employee
 
 # Create your views here.
 def show_main(request):
@@ -62,3 +62,12 @@ def show_json_by_id(request, product_id):
         return HttpResponse(json_data, content_type="application/json")
     except Product.DoesNotExist:
         return HttpResponse(status=404)
+
+def add_employee(request):
+    new_employee = Employee.objects.create(name="Aldo", age=19, persona="Computer Science Student")
+    
+    context = {
+        'new_employee' : new_employee
+    }
+
+    return render(request, 'show_employee.html', context)
