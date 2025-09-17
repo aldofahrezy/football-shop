@@ -1,8 +1,12 @@
 # Create your models here.
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 class Product(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+
+
     CATEGORY_CHOICES = [
         ('kits_jerseys', 'Kits & Jerseys'),
         ('footwear', 'Footwear'),
@@ -28,7 +32,6 @@ class Product(models.Model):
     product_views = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     # bisa nambahin: stock, rating, reviews, discount, brand, etc.
-
     
     def __str__(self):
         return self.title
