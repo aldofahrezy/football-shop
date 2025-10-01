@@ -1,25 +1,44 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 {% block content %}
-<p><a href="{% url 'main:show_main' %}"><button>← Back to Products List</button></a></p>
+<div class="container">
+  
+  <p style="margin: 1rem 0;">
+    <a href="{% url 'main:show_main' %}" class="link">← Back to Products</a>
+  </p>
 
-<h1>{{ product.name }}</h1>
-<p><b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
-    <b>Featured</b>{% endif %}{% if product.is_product_hot %} | 
-    <b>Hot</b>{% endif %} | <i>{{ product.created_at|date:"d M Y, H:i" }}</i> 
-    | Views: {{ product.product_views }}</p>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-top: 1rem;">
+    
+    <div>
+      {% if product.thumbnail %}
+        <img src="{{ product.thumbnail }}" alt="{{ product.name }} thumbnail" class="detail-thumb" style="max-height: 550px;">
+      {% else %}
+        <div class="detail-thumb placeholder">No Image</div>
+      {% endif %}
+    </div>
 
-{% if product.thumbnail %}
-<img src="{{ product.thumbnail }}" alt="Product thumbnail" width="300">
-<br /><br />
-{% endif %}
+    <div style="padding-top: 1rem;">
+      <h1 class="page-title" style="margin-bottom: 0.25rem;">{{ product.name }}</h1>
+      <p style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
+        Rp{{ product.price|intcomma }}
+      </p>
+      
+      <p class="muted">{{ product.description }}</p>
 
-<p>{{ product.description }}</p>
+      <div class="detail-actions" style="margin: 1.5rem 0;">
+        <a href="#" class="btn btn-primary" style="background-color: #111827;">Add to cart</a>
+        <a href="#" class="btn btn-secondary">Wishlist</a>
+      </div>
 
-{% if product.user %}
-    <p>Seller: {{ product.user.username }}</p>
-{% else %}
-    <p>Seller: Anonymous</p>
-{% endif %}
+      <ul class="muted small" style="list-style-type: disc; padding-left: 1.25rem;">
+        <li>Free shipping on orders over Rp500.000</li>
+        <li>30-day returns</li>
+        <li>2-year limited warranty</li>
+      </ul>
+    </div>
 
+  </div>
 
+</div>
 {% endblock content %}

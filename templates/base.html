@@ -12,9 +12,22 @@
     </head>
 
     <body class="bg-gray-50 font-sans antialiased">
-        {% include 'navbar.html' %}
+        {% block navbar %}
+            {% include 'partials/navbar.html' %}
+        {% endblock navbar %}
 
         <!-- Content/Komponen -->
-        {% block content %} {% endblock content %}
+        <main>
+            {% block content %} {% endblock content %}
+        </main>
+        
+        {% include 'partials/footer.html' %} 
+
+        <script>
+            // Script untuk toggle menu hamburger
+            document.getElementById('hamburger-btn').addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.toggle('show');
+            });
+        </script>
     </body>
 </html>

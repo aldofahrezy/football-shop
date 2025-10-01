@@ -17,22 +17,30 @@
         </div>
         <div>
             <img 
-              src="{% static 'images/football-player-action.jpg' %}" 
-              alt="Football player controlling the ball" 
-              style="width: 100%; border-radius: var(--radius); border: 1px solid var(--color-border);"
+                src="{% static 'images/football-player-action.jpg' %}" 
+                alt="Football player controlling the ball" 
+                style="width: 100%; border-radius: var(--radius); border: 1px solid var(--color-border);"
             >
         </div>
     </section>
 
-    <section style="margin-top: 3rem;">
+    <section id="product-section" style="margin-top: 3rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 class="page-title" style="margin: 0;">Featured</h2>
             <a href="{% url 'main:show_main' %}" class="link small">View all</a>
         </div>
 
+        <div class="filters" style="margin-bottom: 1.5rem;">
+            <a href="?filter=all#product-section" class="btn btn-chip {% if active_filter == 'all' %}active{% endif %}">All Products</a>
+            <a href="?filter=my#product-section" class="btn btn-chip {% if active_filter == 'my' %}active{% endif %}">My Products</a>
+        </div>
+        
         <div class="product-grid">
             {% if not product_list %}
-                <p class="empty" style="grid-column: 1 / -1;">No products found in the shop yet.</p>
+                <div class="empty" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;">
+                    <img src="{% static 'images/empty-box.png' %}" alt="No products found" style="width: 150px; margin: 0 auto 1rem;">
+                    <p class="empty" style="grid-column: 1 / -1;">No products found in the shop yet.</p>
+                </div>
             {% else %}
                 {% for product in product_list %}
                     {% include 'partials/product_card.html' %}
@@ -40,6 +48,5 @@
             {% endif %}
         </div>
     </section>
-
 </div>
 {% endblock content %}

@@ -1,22 +1,43 @@
 {% extends 'base.html' %}
 
-{% load static %}
-
 {% block content %}
+<div class="container">
+  <div class="form-card" style="max-width: 700px; margin: 2rem auto;">
+    <h1 class="page-title">Edit Product</h1>
+    <p class="muted" style="margin-top: -0.5rem; margin-bottom: 1.5rem;">Update the details of your product below.</p>
 
-<h1>Edit Product</h1>
+    <form method="POST">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            
+            {% if field.help_text %}
+              <p class="muted small" style="margin-top: 0.25rem;">{{ field.help_text }}</p>
+            {% endif %}
 
-<form method="POST">
-    {% csrf_token %}
-    <table>
-        {{ form.as_table }}
-        <tr>
-            <td></td>
-            <td>
-                <input type="submit" value="Edit Product"/>
-            </td>
-        </tr>
-    </table>
-</form>
+            {% if field.errors %}
+              <div class="muted small" style="color: #ef4444; margin-top: 0.25rem;">
+                {{ field.errors.as_text }}
+              </div>
+            {% endif %}
+        </div>
+        {% endfor %}
 
-{% endblock %}
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Script untuk menambahkan kelas CSS ke semua input, textarea, dan select
+  document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('form input:not([type="submit"]):not([type="checkbox"]), form textarea, form select');
+    inputs.forEach(input => {
+      input.classList.add('form-input');
+    });
+  });
+</script>
+{% endblock content %}

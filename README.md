@@ -52,7 +52,7 @@ Sangat baik, Kak! Tutorial yang diberikan komprehensif dan mudah dipahami. Selai
 <br>
 <H1>TUGAS INDIVIDU 3</H1>
 
-<H2>1.  Jelaskan mengapa kita memerlukan data delivery dalam pengimplementasian sebuah platform?</H2>
+<H2>1. Jelaskan mengapa kita memerlukan data delivery dalam pengimplementasian sebuah platform?</H2>
 
 Data delivery dibutuhkan oleh sebuah platform untuk menampilkan data dari backend ke frontend. Tentunya, data merupakan salah satu unsur yang sangat penting bagi sebuah platform sebagai sebuah teknologi informasi. Mengimplementasikan mekanisme data delivery yang baik bisa dilihat seperti membangun sebuah sistem peredaran darah bagi platform. Sistem inilah yang memastikan bahwa  yang tepat sampai ke tempat yang tepat pada waktu yang tepat sehingga seluruh ekosistem digital platform berfungsi sebagai satu kesatuan yang koheren. Dengan mekasnisme data delivery yang baik, kita juga mampu memisahkan cara data dikirim dan cara data diproses sehingga kita, sebagai pengembang, dapat mengembangkan dan menskalakan frontend dan backend secara independen.
 
@@ -217,3 +217,12 @@ Django menangai risiko-risiko keamanan tersebut dengan:
 ![Dummy data 2 untuk dummy1](assets/TI4/dummy_2/dummy2_product2.png)
 
 ![Dummy data 2 untuk dummy1](assets/TI4/dummy_2/dummy2_product3.png)
+
+<br>
+<H1>TUGAS INDIVIDU 3</H1>
+
+<H2>1. Jika terdapat beberapa CSS selector untuk suatu elemen HTML, jelaskan urutan prioritas pengambilan CSS selector tersebut!</H2>
+<H2>2. Mengapa responsive design menjadi konsep yang penting dalam pengembangan aplikasi web? Berikan contoh aplikasi yang sudah dan belum menerapkan responsive design, serta jelaskan mengapa!</H2>
+<H2>3. Jelaskan perbedaan antara margin, border, dan padding, serta cara untuk mengimplementasikan ketiga hal tersebut!</H2>
+<H2>4. Jelaskan konsep flex box dan grid layout beserta kegunaannya!</H2>
+<H2>5. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step (bukan hanya sekadar mengikuti tutorial)!</H2>

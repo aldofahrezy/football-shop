@@ -27,7 +27,8 @@ def show_main(request):
     'name': 'Muhammad Aldo Fahrezy',
     'class': 'PBP C',
     'product_list': product_list,
-    'last_login': request.COOKIES.get('last_login', 'Never')
+    'last_login': request.COOKIES.get('last_login', 'Never'),
+    'active_filter': filter_type,
   }
 
   return render(request, "main.html", context)
