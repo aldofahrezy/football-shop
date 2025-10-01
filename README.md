@@ -222,7 +222,168 @@ Django menangai risiko-risiko keamanan tersebut dengan:
 <H1>TUGAS INDIVIDU 3</H1>
 
 <H2>1. Jika terdapat beberapa CSS selector untuk suatu elemen HTML, jelaskan urutan prioritas pengambilan CSS selector tersebut!</H2>
+
+Ketika beberapa selector CSS menargetkan elemen HTML yang sama, browser akan menentukan aturan mana yang akan diterapkan berdasarkan urutan prioritas yang dikenal sebagai spesifisitas (specificity) dan kaidah turunan (cascade). Aturan dengan spesifisitas lebih tinggi akan diutamakan.
+
+Urutan prioritas dari yang tertinggi hingga terendah adalah sebagai berikut:
+- Inline Styles: Atribut style yang ditulis langsung pada tag HTML. Ini memiliki prioritas mutlak. 
+
+Contoh: ```<p style="color: red;">Teks ini pasti merah.</p>```
+
+Output: <p style="color: red;">Teks ini pasti merah.</p>
+
+- ID Selectors: Selector yang menggunakan #id. ID harus unik dalam satu halaman.
+
+Contoh: ```#header { background-color: blue; }```
+
+- Class, Attribute, dan Pseudo-class Selectors: Ketiganya memiliki tingkat spesifisitas yang sama.
+
+- - Class: Selector yang diawali dengan titik (.). 
+
+Contoh: ```.tombol-utama { border: none; }```
+
+- - Attribute: Selector yang menargetkan elemen berdasarkan atributnya.
+
+Contoh: ```input[type="text"] { width: 100%; }```
+
+- - Pseudo-class: Selector untuk state khusus elemen.
+
+Contoh: ```a:hover { text-decoration: underline; }```
+
+- Type Selectors dan Pseudo-elements:
+
+- - Type: Selector yang menargetkan nama tag HTML. 
+
+Contoh: ```p { font-size: 16px; }```
+
+- - Pseudo-element: Selector yang menargetkan bagian spesifik dari elemen.
+
+Contoh: ```p::first-line { font-weight: bold; }```
+
+Jika dua selector memiliki nilai spesifisitas yang sama, maka aturan yang didefinisikan paling akhir di dalam berkas CSS akan menjadi pemenangnya. Penggunaan !important akan mengesampingkan semua aturan di atas, namun praktiknya sangat tidak dianjurkan karena dapat merusak alur cascade dan menyulitkan proses debugging.
+
 <H2>2. Mengapa responsive design menjadi konsep yang penting dalam pengembangan aplikasi web? Berikan contoh aplikasi yang sudah dan belum menerapkan responsive design, serta jelaskan mengapa!</H2>
+
+Responsive design adalah sebuah pendekatan dalam pengembangan web yang memastikan tampilan situs dapat beradaptasi secara optimal dengan berbagai ukuran layar perangkat, mulai dari monitor desktop yang lebar hingga layar ponsel yang kecil. Konsep ini menjadi sangat penting karena beberapa alasan krusial:
+
+- Dominasi Pengguna Mobile
+
+Saat ini, mayoritas akses internet dilakukan melalui perangkat seluler. Tanpa desain yang responsif, pengguna mobile akan mendapatkan pengalaman yang buruk, seperti harus melakukan zoom dan scroll horizontal.
+
+- Peningkatan User Experience (UX)
+
+Situs yang responsif memberikan pengalaman pengguna yang lebih baik dan intuitif, yang pada akhirnya dapat meningkatkan kepuasan dan retensi pengguna.
+
+- Optimasi Mesin Pencari (SEO)
+
+Mesin pencari seperti Google secara eksplisit memprioritaskan situs yang mobile-friendly dalam peringkat pencariannya. Situs yang tidak responsif berisiko kehilangan visibilitas secara signifikan.
+
+- Efisiensi Pengembangan
+
+Daripada membangun dan memelihara beberapa versi situs (satu untuk desktop, satu untuk mobile), responsive design memungkinkan pengembang untuk bekerja dengan satu basis kode yang sama.
+
+Contoh Aplikasi:
+
+- Sudah Menerapkan (Baik): Tokopedia,
+
+Situs Tokopedia secara cerdas menyesuaikan tata letaknya. Pada desktop, halaman menampilkan banyak produk dalam format grid multi-kolom untuk memaksimalkan ruang. Saat dibuka di ponsel, tata letaknya berubah menjadi satu atau dua kolom vertikal, sehingga lebih mudah di-scroll dengan ibu jari.
+
+- Belum Menerapkan (Contoh Klasik):
+
+Banyak situs web institusi atau pemerintahan versi lama yang tidak responsif. Contohnya adalah situs-situs arsip akademis lama. Jika dibuka di ponsel, seluruh halaman versi desktop hanya diperkecil, membuat teks menjadi sangat kecil dan tautan sulit untuk diklik tanpa melakukan zoom manual. Hal ini terjadi karena situs tersebut dibangun dengan dimensi yang tetap (fixed-width) dan tidak menggunakan media queries untuk beradaptasi.
+
 <H2>3. Jelaskan perbedaan antara margin, border, dan padding, serta cara untuk mengimplementasikan ketiga hal tersebut!</H2>
+
+Margin, border, dan padding adalah tiga komponen inti dari CSS Box Model, yang mendefinisikan ruang di sekitar setiap elemen HTML.
+
+- Padding (Bantalan Dalam)
+
+Padding merupakan ruang transparan yang berada di dalam border. Fungsinya adalah untuk memberikan jarak antara konten (misalnya teks atau gambar) dengan border elemen itu sendiri.
+
+- Border (Garis Batas)
+
+Border merupakan garis yang mengelilingi padding dan konten. Kita bisa mengatur ketebalan, gaya (misalnya solid, dashed), dan warnanya.
+
+- Margin (Jarak Luar)
+
+Margin merupakan ruang transparan yang berada di luar border. Fungsinya adalah untuk menciptakan jarak antara elemen tersebut dengan elemen lain di sekitarnya.
+
+Ketiga properti ini dapat diimplementasikan dalam CSS dengan cara berikut:
+
+```
+.elemen-kotak {
+/* Padding: 10 piksel di semua sisi */
+padding: 10px;
+
+/* Border: 2 piksel, garis lurus, warna hitam */
+border: 2px solid black;
+
+/* Margin: 20 piksel di semua sisi */
+margin: 20px;
+}
+```
+
+Kita juga bisa mengatur setiap sisi secara individual, misalnya padding-top, margin-left, atau border-bottom-color untuk kontrol yang lebih presisi.
+
 <H2>4. Jelaskan konsep flex box dan grid layout beserta kegunaannya!</H2>
+
+Flexbox dan Grid adalah dua model tata letak modern di CSS yang dirancang untuk menyusun elemen secara efisien dan responsif. Keduanya memiliki tujuan yang berbeda.
+
+- Flexbox (Flexible Box Layout)
+
+- - Konsep
+
+Flexbox adalah model tata letak satu dimensi. Artinya, ia sangat baik dalam mengatur elemen dalam satu baris (horizontal) atau satu kolom (vertikal), tetapi tidak keduanya secara bersamaan. Bayangkan menata buku di satu rak; bisa berjajar ke samping atau menumpuk ke atas.
+
+- - Kegunaan Utama
+
+- - - Penyelarasan Komponen
+
+Sangat ideal untuk menyelaraskan item di dalam sebuah komponen, seperti menengahkan tombol di dalam sebuah kartu (card), atau menyebarkan item navigasi secara merata.
+
+- - - Tata Letak Dinamis
+
+Ketika jumlah atau ukuran item tidak diketahui, Flexbox dapat secara fleksibel "membungkus" (wrap) item ke baris berikutnya.
+
+- - - Distribusi Ruang
+
+Mudah untuk mendistribusikan ruang kosong di antara item-item.
+
+- Grid Layout
+
+- - Konsep
+
+Grid adalah model tata letak dua dimensi. Ia memungkinkan kita untuk mengatur elemen dalam baris dan kolom secara bersamaan, layaknya sebuah tabel atau spreadsheet. Ini memberikan kontrol penuh atas posisi elemen di kedua sumbu.
+
+- - Kegunaan Utama
+
+Tata Letak Halaman Utama: Sempurna untuk merancang struktur utama sebuah halaman web, seperti mendefinisikan area untuk header, sidebar, konten utama, dan footer.
+
+- - - Desain Kompleks
+
+Ketika dibutuhkan tata letak yang presisi dan tumpang tindih, Grid adalah pilihan yang tepat.
+
+- - - Galeri
+
+Membuat galeri gambar atau produk yang tersusun rapi dalam baris dan kolom yang konsisten.
+
+Secara sederhana, gunakan Flexbox untuk mengatur konten di dalam sebuah komponen, dan gunakan Grid untuk mengatur tata letak komponen-komponen tersebut di halaman.
+
 <H2>5. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step (bukan hanya sekadar mengikuti tutorial)!</H2>
+
+1. Pertama-tama saya memodifikasi base.html dan menambahkan script serta link untuk menghubungkan dengan tailwindcss dan stylings
+2. Lalu, saya membuat direktori static pada root dan membuat direktori css
+3. Di direktori css, saya membuat sebuah berkas global.css yang berfungsi untuk mendefinisikan style-style global pada projek
+4. Tidak lupa, saya menambahkan static url di berkas settings.py 
+5. Saya melakukan styling dasar dan memulai dengan membuat berkas navbar.html pada /templates/partial/
+6. Saya juga membuat footer agar website terlihat lebih professional
+7. Ketika saya mencoba untuk add, commit, dan push ke pws, ternyata stylingnya tidak ada atau belum ter-apply
+8. Setelah meriset isu tersebut, ternyata saya perlu menambahkan WhiteNoiseMiddleware pada settings.py dan segera menambahkannya
+9. Sekarang styling sudah ada dan berjalan dengan baik
+10. Saya melanjutkan dengan memodifikasi navbar agar responsif dan menambahkan icon hamburger untuk mendukung kompatibilitas navbar pada layar yang lebih kecil seperti pada mobile devices
+11. Pada templates di direktori main, saya juga membuat direktori partials dan membuat product_card.html
+12. Saya memodifikasi main untuk menampilkan product-product menggunakan product_card.html tersebut
+13. Saya juga membuat hero section pada main.html saya agar website terlihat lebih menarik
+14. Saya melanjutkan pengembangan dengan memodifikasi styling pada forms, seperti pada register, login, create_product, dan edit_product
+15. Terakhir, saya menambahkan styling pada product_details
+16. Development styling dasar selesai dan siap untuk dikembangkan secara lebih lanjut di masa mendatang
