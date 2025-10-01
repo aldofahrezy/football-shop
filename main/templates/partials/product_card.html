@@ -1,0 +1,32 @@
+{% load humanize %}
+
+<div class="product-card">
+
+    <a href="{% url 'main:show_product' product.id %}" class="thumb-wrap">
+        {% if product.thumbnail %}
+            <img src="{{ product.thumbnail }}" alt="{{ product.name }} thumbnail" class="thumb">
+        {% else %}
+            <div class="thumb-placeholder">No Image</div>
+        {% endif %}
+    </a>
+
+    <div class="product-info">
+        <h3 class="product-title">
+            <a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a>
+        </h3>
+        <p class="muted">
+            Rp{{ product.price|intcomma }}
+        </p>
+    </div>
+
+    <div class="card-actions">
+        {% if user.is_authenticated and product.user == user %}
+            <a href="{% url 'main:edit_product' product.pk %}" class="btn btn-outline" style="flex-grow: 1;">Edit</a>
+            <a href="{% url 'main:delete_product' product.pk %}" class="btn btn-danger" style="flex-grow: 1;">Delete</a>
+        {% else %}
+            <a href="#" class="btn btn-primary" style="background-color: #111827; flex-grow: 1;">Add to cart</a>
+            <a href="{% url 'main:show_product' product.id %}" class="btn btn-secondary">View</a>
+        {% endif %}
+    </div>
+
+</div>

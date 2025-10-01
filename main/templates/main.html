@@ -1,80 +1,45 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<h1>{{ project_name }}</h1>
+<div class="container">
 
-<h5>Name: </h5>
-<p>{{ name }}</p>
+    <section class="product-detail" style="align-items: center; padding: 2rem 0; background: transparent; border: none;">
+        <div>
+            <h1 class="page-title" style="font-size: 2.5rem; line-height: 1.2;">Gear up for the season</h1>
+            <p class="muted text-balance" style="font-size: 1.1rem; margin-top: 0.5rem;">
+                Boots, kits, balls, and accessories—everything you need to own the pitch.
+            </p>
+            <div class="actions" style="margin-top: 1.5rem;">
+                <a href="{% url 'main:show_main' %}" class="btn btn-primary">Shop Products</a>
+                <a href="#" class="btn btn-secondary">Explore Kits</a>
+            </div>
+        </div>
+        <div>
+            <img 
+              src="{% static 'images/football-player-action.jpg' %}" 
+              alt="Football player controlling the ball" 
+              style="width: 100%; border-radius: var(--radius); border: 1px solid var(--color-border);"
+            >
+        </div>
+    </section>
 
-<h5>NPM: </h5>
-<p>{{ npm }}</p>
+    <section style="margin-top: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 class="page-title" style="margin: 0;">Featured</h2>
+            <a href="{% url 'main:show_main' %}" class="link small">View all</a>
+        </div>
 
-<h5>Class: </h5>
-<p>{{ class }}</p>
+        <div class="product-grid">
+            {% if not product_list %}
+                <p class="empty" style="grid-column: 1 / -1;">No products found in the shop yet.</p>
+            {% else %}
+                {% for product in product_list %}
+                    {% include 'partials/product_card.html' %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </section>
 
-<a href="{% url 'main:create_product' %}">
-  <button>+ Add Product</button>
-</a>
-
-<a href="{% url 'main:logout' %}">
-  <button>Logout</button>
-</a>
-
-<h5>Sesi terakhir login: {{ last_login }}</h5>
-
-<hr>
-
-<a href="?filter=all">
-  <button type="button">All Products</button>
-</a>
-<a href="?filter=my">
-  <button type="button">My Products</button>
-</a> 
-
-{% if not product_list %}
-<p>Belum ada data produk pada football shop.</p>
-{% else %}
-
-{% for product in product_list %}
-<div>
-  <h2><a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a></h2>
-
-  <p><b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
-    <b>Featured</b>{% endif %}{% if product.is_product_hot %} | 
-    <b>Hot</b>{% endif %} | <i>{{ product.created_at|date:"d M Y H:i" }}</i> 
-    | Views: {{ product.product_views }}</p>
-
-  {% if product.thumbnail %}
-  <img src="{{ product.thumbnail }}" alt="thumbnail" width="150" height="100">
-  <br />
-  {% endif %}
-
-  <p>{{ product.description|truncatewords:25 }}...</p>
-
-  <p>
-    <a href="{% url 'main:show_product' product.id %}">
-      <button>
-        Details
-      </button>
-    </a>
-    
-    {% if user.is_authenticated and product.user == user %}
-    <a href="{% url 'main:edit_product' product.pk %}">
-      <button>
-        Edit
-      </button>
-    </a>
-    <a href="{% url 'main:delete_product' product.pk %}">
-      <button>
-        Delete
-      </button>
-    </a>
-    {% endif %}
-  </p>
 </div>
-
-<hr>
-{% endfor %}
-
-{% endif %}
-
 {% endblock content %}

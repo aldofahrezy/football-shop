@@ -1,15 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <!-- Metadata/Konfigurasi -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% block meta %} {% endblock meta %}
-</head>
+<html lang="en" class="scroll-smooth">
+    <head>
+        <!-- Metadata/Konfigurasi -->
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<body>
-    <!-- Content/Komponen -->
-    {% block content %} {% endblock content %}
-</body>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/global.css' %}">
+        {% block meta %} {% endblock meta %}
+    </head>
+
+    <body class="bg-gray-50 font-sans antialiased">
+        {% include 'navbar.html' %}
+
+        <!-- Content/Komponen -->
+        {% block content %} {% endblock content %}
+    </body>
 </html>
