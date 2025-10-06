@@ -1,12 +1,15 @@
 import datetime
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.core import serializers
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
+# from django.views.decorators.csrf import csrf_exempt
+# from django.views.decorators.http import require_POST 
+# from django.utils.html import strip_tags
 
 from main.forms import ProductForm
 from main.models import Product
@@ -14,21 +17,21 @@ from main.models import Product
 # Create your views here.
 @login_required(login_url='/login')
 def show_main(request):
-  filter_type = request.GET.get("filter", "all")  # default 'all'
+  # filter_type = request.GET.get("filter", "all")  # default 'all'
 
-  if filter_type == "all":
-    product_list = Product.objects.all()
-  else:
-    product_list = Product.objects.filter(user=request.user)
+  # if filter_type == "all":
+  #   product_list = Product.objects.all()
+  # else:
+  #   product_list = Product.objects.filter(user=request.user)
 
   context = {
     'project_name': 'The Kickoff Zone',
     'npm' : '2406423055',
     'name': 'Muhammad Aldo Fahrezy',
     'class': 'PBP C',
-    'product_list': product_list,
+    # 'product_list': product_list,
     'last_login': request.COOKIES.get('last_login', 'Never'),
-    'active_filter': filter_type,
+    # 'active_filter': filter_type,
   }
 
   return render(request, "main.html", context)
@@ -94,8 +97,23 @@ def show_xml(request):
 
 def show_json(request):
   product_list = Product.objects.all()
-  json_data = serializers.serialize("json", product_list)
-  return HttpResponse(json_data, content_type="application/json")
+  data = [
+    {
+      'id': str(product.id),
+      'name': product.name,
+      'description': product.description,
+      'category': product.category,
+      'price': product.price,
+      'thumbnail': product.thumbnail,
+      'product_views': product.product_views,
+      'created_at': product.created_at.isoformat() if product.created_at else None,
+      'is_featured': product.is_featured,
+      'user_id': product.user_id,
+    }
+    for product in product_list
+  ]
+
+  return JsonResponse(data, safe=False)
 
 def show_xml_by_id(request, product_id):
   try:
@@ -107,11 +125,23 @@ def show_xml_by_id(request, product_id):
 
 def show_json_by_id(request, product_id):
   try:
-    product_item = Product.objects.get(pk=product_id)
-    json_data = serializers.serialize("json", [product_item])
-    return HttpResponse(json_data, content_type="application/json")
+    product = Product.objects.select_related('user').get(pk=product_id)
+    data = {
+      'id': str(product.id),
+      'name': product.name,
+      'description': product.description,
+      'category': product.category,
+      'price': product.price,
+      'thumbnail': product.thumbnail,
+      'product_views': product.product_views,
+      'created_at': product.created_at.isoformat() if product.created_at else None,
+      'is_featured': product.is_featured,
+      'user_id': product.user_id,
+      'user_username': product.user.username if product.user_id else None,
+    }
+    return JsonResponse(data)
   except Product.DoesNotExist:
-    return HttpResponse(status=404)
+    return JsonResponse({'detail': 'Not found'}, status=404)
     
 def register(request):
   form = UserCreationForm()
@@ -147,3 +177,36 @@ def logout_user(request):
   response = HttpResponseRedirect(reverse('main:login'))
   response.delete_cookie('last_login')
   return redirect('main:login')
+
+# @csrf_exempt # tidak digunakan karena berbahaya, website jadi rentan serangan csrf. Sebaliknya, saya handle csrf token ini di main
+# @require_POST
+@login_required(login_url='/login') # Tetap gunakan ini untuk keamanan
+def create_product_ajax(request):
+  # Pengganti decorator @require_POST
+  if request.method == 'POST':
+    # Gunakan ProductForm untuk validasi dan keamanan otomatis
+    form = ProductForm(request.POST)
+    if form.is_valid():
+      # Simpan produk dan hubungkan dengan user yang sedang login
+      product = form.save(commit=False)
+      product.user = request.user
+      product.save()
+      
+      # Siapkan data JSON dari produk yang baru dibuat
+      new_product_data = {
+        'id': str(product.id),
+        'name': product.name,
+        'description': product.description,
+        'price': product.price,
+        'thumbnail': product.thumbnail,
+        'user_id': product.user.id,
+      }
+
+      # 4. Kembalikan data produk baru sebagai JSON dengan status 201 (Created)
+      return JsonResponse({'status': 'success', 'product': new_product_data}, status=201)
+    else:
+      # 5. Jika form tidak valid, kembalikan pesan error sebagai JSON
+      return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        
+  # Jika method bukan POST, kembalikan error
+  return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

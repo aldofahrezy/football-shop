@@ -3,50 +3,226 @@
 
 {% block content %}
 <div class="container">
+  <section class="product-detail" style="align-items: center; padding: 2rem 0; background: transparent; border: none;">
+      <div>
+        <h1 class="page-title" style="font-size: 2.5rem; line-height: 1.2;">Gear up for the season</h1>
+        <p class="muted text-balance" style="font-size: 1.1rem; margin-top: 0.5rem;">
+          Boots, kits, balls, and accessories—everything you need to own the pitch.
+        </p>
+        <div class="actions" style="margin-top: 1.5rem;">
+          <a href="{% url 'main:show_main' %}" class="btn btn-primary">Shop Products</a>
+          <a href="#" class="btn btn-secondary">Explore Kits</a>
+        </div>
+      </div>
+      <div>
+        <img 
+          src="{% static 'images/football-player-action.jpg' %}" 
+          alt="Football player controlling the ball" 
+          style="width: 100%; border-radius: var(--radius); border: 1px solid var(--color-border);"
+        >
+      </div>
+  </section>
 
-    <section class="product-detail" style="align-items: center; padding: 2rem 0; background: transparent; border: none;">
-        <div>
-            <h1 class="page-title" style="font-size: 2.5rem; line-height: 1.2;">Gear up for the season</h1>
-            <p class="muted text-balance" style="font-size: 1.1rem; margin-top: 0.5rem;">
-                Boots, kits, balls, and accessories—everything you need to own the pitch.
-            </p>
-            <div class="actions" style="margin-top: 1.5rem;">
-                <a href="{% url 'main:show_main' %}" class="btn btn-primary">Shop Products</a>
-                <a href="#" class="btn btn-secondary">Explore Kits</a>
-            </div>
-        </div>
-        <div>
-            <img 
-                src="{% static 'images/football-player-action.jpg' %}" 
-                alt="Football player controlling the ball" 
-                style="width: 100%; border-radius: var(--radius); border: 1px solid var(--color-border);"
-            >
-        </div>
-    </section>
+  <section id="product-section" style="margin-top: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+      <h2 class="page-title" style="margin: 0;">Featured</h2>
+      
+      <div class="actions">
+        {% if user.is_authenticated %}
+          <button type="button" class="btn btn-primary" style="background-color: #111827;" onclick="showModal()">
+            &#43; Create Product
+          </button>
+        {% endif %}
+        <a href="{% url 'main:show_main' %}" class="btn btn-secondary">View all</a>
+      </div>
+    </div>
 
-    <section id="product-section" style="margin-top: 3rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 class="page-title" style="margin: 0;">Featured</h2>
-            <a href="{% url 'main:show_main' %}" class="link small">View all</a>
-        </div>
+    <div class="filters" style="margin-bottom: 1.5rem;">
+      <button id="filter-all" class="btn btn-chip">All Products</button>
+      {% if user.is_authenticated %}
+        <button id="filter-my" class="btn btn-chip">My Products</button>
+      {% endif %}
+    </div>
+    
+    <div id="loading" class="hidden" style="text-align: center; padding: 3rem 1rem;">
+      <p>Loading products...</p>
+    </div>
+    <div id="error" class="hidden" style="text-align: center; padding: 3rem 1rem; color: red;">
+      <p>Failed to load products. Please try again later.</p>
+    </div>
+    <div id="empty" class="hidden" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;">
+      <img src="{% static 'images/empty-box.png' %}" alt="No products found" style="width: 150px; margin: 0 auto 1rem;">
+      <p>No products to display.</p>
+    </div>
 
-        <div class="filters" style="margin-bottom: 1.5rem;">
-            <a href="?filter=all#product-section" class="btn btn-chip {% if active_filter == 'all' %}active{% endif %}">All Products</a>
-            <a href="?filter=my#product-section" class="btn btn-chip {% if active_filter == 'my' %}active{% endif %}">My Products</a>
-        </div>
-        
-        <div class="product-grid">
-            {% if not product_list %}
-                <div class="empty" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;">
-                    <img src="{% static 'images/empty-box.png' %}" alt="No products found" style="width: 150px; margin: 0 auto 1rem;">
-                    <p class="empty" style="grid-column: 1 / -1;">No products found in the shop yet.</p>
-                </div>
-            {% else %}
-                {% for product in product_list %}
-                    {% include 'partials/product_card.html' %}
-                {% endfor %}
-            {% endif %}
-        </div>
-    </section>
+    <div id="grid" class="hidden"></div>
+  </section>
 </div>
+
+<script>
+// Konfigurasi
+const PRODUCT_API_ENDPOINT = "{% url 'main:show_json' %}";
+const CURRENT_USER_ID = "{{ user.id|default_if_none:'' }}";
+
+// Elemen DOM
+const loadingSpinner = document.getElementById('loading');
+const errorMessage = document.getElementById('error');
+const emptyStateDisplay = document.getElementById('empty');
+const productGridContainer = document.getElementById('grid');
+const showAllProductsButton = document.getElementById('filter-all');
+const showMyProductsButton = document.getElementById('filter-my');
+
+// Variabel State
+let activeFilter = 'all';
+let allProductsData = [];
+
+// Memperbarui tampilan tombol filter
+function updateFilterButtonsAppearance() {
+  if (!showAllProductsButton) return;
+  const baseClass = 'btn btn-chip';
+  const activeClass = 'btn btn-chip active';
+  if (activeFilter === 'all') {
+    showAllProductsButton.className = activeClass;
+    if (showMyProductsButton) showMyProductsButton.className = baseClass;
+  } else {
+    showAllProductsButton.className = baseClass;
+    if (showMyProductsButton) showMyProductsButton.className = activeClass;
+  }
+}
+
+// Menampilkan/menyembunyikan section halaman
+function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+  loadingSpinner.classList.toggle('hidden', !showLoading);
+  errorMessage.classList.toggle('hidden', !showError);
+  emptyStateDisplay.classList.toggle('hidden', !showEmpty);
+  productGridContainer.classList.toggle('hidden', !showGrid);
+  if (showGrid) {
+    productGridContainer.className = 'product-grid';
+  }
+}
+
+// Membuat elemen kartu produk
+function buildProductCardElement(product) {
+  const articleElement = document.createElement('div');
+  articleElement.className = 'product-card';
+
+  // URL tidak perlu disanitasi karena berasal dari server dan polanya tetap
+  const PLACEHOLDER = '00000000-0000-0000-0000-000000000000';
+  const detailLink = `{% url 'main:show_product' '00000000-0000-0000-0000-000000000000' %}`.replace(PLACEHOLDER, product.id);
+  const editLink = `{% url 'main:edit_product' '00000000-0000-0000-0000-000000000000' %}`.replace(PLACEHOLDER, product.id);
+  const deleteLink = `{% url 'main:delete_product' '00000000-0000-0000-0000-000000000000' %}`.replace(PLACEHOLDER, product.id);
+  
+  // DOM Purify
+  // Sanitasi semua data dari API sebelum digunakan
+  const productName = DOMPurify.sanitize(product.name);
+  const productThumbnail = DOMPurify.sanitize(product.thumbnail);
+  const formattedPrice = `Rp${new Intl.NumberFormat('en-US').format(product.price)}`; // Harga adalah angka, jadi sudah aman
+
+  // --- Elemen HTML Dinamis ---
+  const thumbnailHtml = product.thumbnail
+    ? `<img src="${productThumbnail}" alt="${productName} thumbnail" class="thumb">`
+    : `<div class="thumb-placeholder">No Image</div>`;
+
+  // Tombol aksi dibuat dari data yang aman (URL dari server), jadi tidak perlu disanitasi
+  const actionsHtml = CURRENT_USER_ID && Number(CURRENT_USER_ID) === Number(product.user_id)
+    ? `<a href="${editLink}" class="btn btn-outline" style="flex-grow: 1;">Edit</a>
+      <a href="${deleteLink}" class="btn btn-danger" style="flex-grow: 1;" onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>`
+    : `<a href="#" class="btn btn-primary" style="background-color: #111827; flex-grow: 1;">Add to cart</a>
+      <a href="${detailLink}" class="btn btn-secondary">View</a>`;
+
+  // Gabungkan semua bagian yang sudah aman ke dalam HTML akhir
+  articleElement.innerHTML = `
+    <a href="${detailLink}" class="thumb-wrap">
+      ${thumbnailHtml}
+    </a>
+    <div class="product-info">
+      <h3 class="product-title">
+        <a href="${detailLink}">${productName}</a>
+      </h3>
+      <p class="muted">${formattedPrice}</p>
+    </div>
+    <div class="card-actions">${actionsHtml}</div>
+  `;
+  return articleElement;
+}
+
+// Merender semua kartu produk
+function renderAllProductCards(products) {
+  productGridContainer.innerHTML = '';
+  products.forEach(product => {
+    const cardElement = buildProductCardElement(product);
+    productGridContainer.appendChild(cardElement);
+  });
+}
+
+// Memfilter dan menampilkan produk
+function filterAndDisplayProducts() {
+  updateFilterButtonsAppearance();
+  
+  const filteredProducts = activeFilter === 'all' 
+    ? allProductsData 
+    : allProductsData.filter(product => Number(product.user_id) === Number(CURRENT_USER_ID));
+  
+  if (filteredProducts.length === 0) {
+    displayPageSection({ showEmpty: true });
+  } else {
+    renderAllProductCards(filteredProducts);
+    displayPageSection({ showGrid: true });
+  }
+}
+
+// Mengambil data produk dari server
+async function fetchProductsFromServer() {
+  try {
+    displayPageSection({ showLoading: true });
+    
+    const response = await fetch(PRODUCT_API_ENDPOINT);
+    if (!response.ok) {
+        throw new Error('Failed to fetch data from server');
+    }
+
+    const productData = await response.json();
+    allProductsData = productData || [];
+    
+    filterAndDisplayProducts();
+  } catch (error) {
+    console.error('Error loading products:', error);
+    displayPageSection({ showError: true });
+  }
+}
+
+// Event handlers
+function handleShowAllProductsClick() {
+  activeFilter = 'all';
+  filterAndDisplayProducts();
+}
+
+function handleShowMyProductsClick() {
+  activeFilter = 'my';
+  filterAndDisplayProducts();
+}
+
+// Inisialisasi halaman
+function initializeProductsPage() {
+  if(showAllProductsButton) {
+    showAllProductsButton.addEventListener('click', handleShowAllProductsClick);
+  }
+  if(showMyProductsButton) {
+    showMyProductsButton.addEventListener('click', handleShowMyProductsClick);
+  }
+  
+  // Memuat produk saat halaman pertama kali dibuka
+  fetchProductsFromServer();
+
+  // Dengarkan event 'productAdded' yang disiarkan oleh modal.
+  // Jika event terjadi, panggil ulang fungsi untuk mengambil semua produk.
+  document.addEventListener('productAdded', function() {
+    console.log('ProductAdded event detected! Refreshing product list...');
+    fetchProductsFromServer();
+  });
+}
+
+// Memulai aplikasi
+initializeProductsPage();
+</script>
 {% endblock content %}

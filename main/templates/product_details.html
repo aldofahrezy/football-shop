@@ -8,23 +8,28 @@
     <a href="{% url 'main:show_main' %}" class="link">← Back to Products</a>
   </p>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-top: 1rem;">
+  <div id="loading-state" class="hidden" style="text-align: center; padding: 5rem 0;">Loading...</div>
+  <div id="error-state" class="hidden" style="text-align: center; padding: 5rem 0; color: red;">Failed to load product details.</div>
+
+  <div id="product-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-top: 1rem;">
     
-    <div>
+    <div id="product-image-container">
       {% if product.thumbnail %}
-        <img src="{{ product.thumbnail }}" alt="{{ product.name }} thumbnail" class="detail-thumb" style="max-height: 550px;">
+        <img id="product-image" src="{{ product.thumbnail }}" alt="{{ product.name }} thumbnail" class="detail-thumb" style="max-height: 550px;">
       {% else %}
         <div class="detail-thumb placeholder">No Image</div>
       {% endif %}
     </div>
 
     <div style="padding-top: 1rem;">
-      <h1 class="page-title" style="margin-bottom: 0.25rem;">{{ product.name }}</h1>
-      <p style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
+      <h1 id="product-name" class="page-title" style="margin-bottom: 0.25rem;">{{ product.name }}</h1>
+      <p id="product-price" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
         Rp{{ product.price|intcomma }}
       </p>
       
-      <p class="muted">{{ product.description }}</p>
+      <p id="product-description" class="muted">{{ product.description }}</p>
+      
+      <p id="product-author" class="muted small" style="margin-top: 1rem;"></p>
 
       <div class="detail-actions" style="margin: 1.5rem 0;">
         <a href="#" class="btn btn-primary" style="background-color: #111827;">Add to cart</a>
@@ -37,8 +42,79 @@
         <li>2-year limited warranty</li>
       </ul>
     </div>
-
   </div>
 
 </div>
+
+<script>
+// Konfigurasi
+const PRODUCT_ID = "{{ product.id }}";
+const PRODUCT_DETAIL_ENDPOINT = `{% url 'main:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', PRODUCT_ID);
+
+// Elemen DOM
+const loadingState = document.getElementById('loading-state');
+const errorState = document.getElementById('error-state');
+const productContent = document.getElementById('product-content');
+
+const productName = document.getElementById('product-name');
+const productPrice = document.getElementById('product-price');
+const productDescription = document.getElementById('product-description');
+const productImageContainer = document.getElementById('product-image-container');
+const productAuthor = document.getElementById('product-author');
+
+// Menampilkan state halaman (loading, error, atau ready)
+function showState(state) {
+    loadingState.classList.toggle('hidden', state !== 'loading');
+    errorState.classList.toggle('hidden', state !== 'error');
+    // Konten produk disembunyikan hanya jika loading atau error
+    productContent.classList.toggle('hidden', state !== 'ready');
+}
+
+// Merender konten produk dengan data dari JSON
+function renderProduct(product) {
+    // Set judul, harga, dan deskripsi
+    productName.textContent = product.name;
+    productDescription.textContent = product.description;
+    document.title = `${product.name} - The Kickoff Zone`;
+
+    const formattedPrice = `Rp${new Intl.NumberFormat('en-US').format(product.price)}`;
+    productPrice.textContent = formattedPrice;
+
+    // Set gambar
+    if (product.thumbnail) {
+        productImageContainer.innerHTML = `<img id="product-image" src="${product.thumbnail}" alt="${product.name} thumbnail" class="detail-thumb" style="max-height: 550px;">`;
+    } else {
+        productImageContainer.innerHTML = `<div class="detail-thumb placeholder">No Image</div>`;
+    }
+
+    // Set author
+    const authorName = product.user_username || 'Unknown Seller';
+    productAuthor.textContent = `Sold by: ${authorName}`;
+}
+
+// Mengambil data detail produk dari API
+async function loadProductDetail() {
+    // Sembunyikan konten awal dan tunjukkan loading
+    // Ini akan terjadi sangat cepat sehingga mungkin tidak terlihat
+    showState('loading');
+    try {
+        const response = await fetch(PRODUCT_DETAIL_ENDPOINT);
+
+        if (!response.ok) {
+            throw new Error('Product not found');
+        }
+
+        const productData = await response.json();
+        renderProduct(productData); // Panggil fungsi render
+        showState('ready'); // Tampilkan konten setelah data siap
+
+    } catch (error) {
+        console.error('Error loading product detail:', error);
+        showState('error'); // Tampilkan pesan error jika gagal
+    }
+}
+
+// Memulai proses saat halaman dimuat
+document.addEventListener('DOMContentLoaded', loadProductDetail);
+</script>
 {% endblock content %}
