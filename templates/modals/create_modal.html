@@ -1,7 +1,7 @@
 <div id="crudModal" class="hidden fixed inset-0 z-50 w-full flex items-center justify-center bg-gray-800 bg-opacity-50">
-    <div id="crudModalContent" class="bg-white rounded-lg shadow-lg w-5/6 sm:w-3/5 md:w-1/2 lg:w-2/5 xl:w-1/3 max-h-screen overflow-y-auto transform transition-all duration-150 ease-out opacity-0 scale-95">
+    <div id="crudModalContent" class="bg-white rounded-lg shadow-lg w-11/12 max-w-lg flex flex-col max-h-[85vh] transform transition-all duration-150 ease-out opacity-0 scale-95">
         
-        <div class="flex items-center justify-between p-6 border-b">
+        <div class="flex items-center justify-between p-6 border-b flex-shrink-0">
             <div>
                 <h3 class="text-xl font-semibold text-gray-900">
                 Create New Product
@@ -14,7 +14,7 @@
             </button>
         </div>
 
-        <div class="p-6">
+        <div class="p-6 overflow-y-auto flex-grow">
             <form id="productForm" class="space-y-6">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
@@ -55,9 +55,9 @@
             </form>
         </div>
 
-        <div class="flex items-center justify-end gap-4 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+        <div class="flex items-center justify-end gap-4 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
             <button type="button" id="cancelButton" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors" onclick="hideModal()">Cancel</button>
-            <button type="submit" id="submitProduct" form="productForm" class="bg-black text-white px-6 py-2 rounded-md font-medium hover:bg-gray-800 transition-colors">Create Product</button>
+            <button type="submit" id="submitProduct" form="productForm" class="bg-black text-white px-6 py-2 rounded-md font-medium hover:bg-gray-800 transition-colors flex items-center gap-2">Create Product</button>
         </div>
 
     </div>
@@ -68,6 +68,7 @@
     const modal = document.getElementById('crudModal');
     const modalContent = document.getElementById('crudModalContent');
     const productForm = document.getElementById('productForm');
+    const submitButton = document.getElementById('submitProduct');
 
     function showModal() {
         if (!modal || !modalContent) return;
@@ -80,6 +81,10 @@
 
     function hideModal() {
         if (!modal || !modalContent) return;
+
+        // Reset semua input di dalam form saat modal ditutup
+        productForm.reset(); 
+
         modalContent.classList.remove('opacity-100', 'scale-100');
         modalContent.classList.add('opacity-0', 'scale-95');
         setTimeout(() => {
@@ -87,9 +92,8 @@
         }, 150); 
     }
 
-    // --- [TAMBAHAN] LOGIKA KLIK DI LUAR MODAL UNTUK MENUTUP ---
+    // Menutup modal jika pengguna mengklik area overlay di luarnya
     modal.addEventListener('click', function(event) {
-        // Cek jika elemen yang diklik adalah overlay itu sendiri (bukan kontennya)
         if (event.target === modal) {
             hideModal();
         }
@@ -97,22 +101,36 @@
 
     // --- LOGIKA SUBMIT FORM AJAX ---
     async function addProductAjax() {
-        const response = await fetch("{% url 'main:create_product_ajax' %}", {
-            method: "POST",
-            body: new FormData(productForm),
-            headers: {
-                "X-CSRFToken": getCookie('csrftoken'),
-            }
-        });
+        // Terapkan loading state pada tombol submit
+        const originalButtonText = 'Create Product';
+        const loadingSpinner = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating...`;
+        
+        submitButton.disabled = true;
+        submitButton.innerHTML = loadingSpinner;
 
-        if (response.ok) {
-            productForm.reset();
-            hideModal();
-            showToast('Product added successfully!', 'success');
-            document.dispatchEvent(new CustomEvent('productAdded'));
-        } else {
-            const data = await response.json();
-            showToast('Error: ' + JSON.stringify(data.errors), 'error');
+        try {
+            const response = await fetch("{% url 'main:create_product_ajax' %}", {
+                method: "POST",
+                body: new FormData(productForm),
+                headers: { "X-CSRFToken": getCookie('csrftoken') }
+            });
+
+            if (response.ok) {
+                hideModal(); // Form akan di-reset oleh fungsi ini
+                showToast('Success!', 'Product added successfully!', 'success');
+                // Kirim event agar bagian lain dari halaman bisa merespon
+                document.dispatchEvent(new CustomEvent('productAdded')); 
+            } else {
+                const data = await response.json();
+                showToast('Creation Failed', 'Please check the form for errors.', 'error');
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            showToast('Error!', 'An unexpected error occurred.', 'error');
+        } finally {
+            // Kembalikan tombol ke state semula setelah proses selesai
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
         }
     }
 
@@ -137,7 +155,42 @@
         return cookieValue;
     }
 
-    function showToast(message, type = 'info') {
-        alert(message);
+    // Fungsi untuk menampilkan notifikasi toast
+    let toastTimeout;
+    function showToast(title, message, type = 'info') {
+        const toast = document.getElementById('toast-component');
+        const toastIcon = document.getElementById('toast-icon');
+        const toastTitle = document.getElementById('toast-title');
+        const toastMessage = document.getElementById('toast-message');
+
+        if (!toast || !toastIcon || !toastTitle || !toastMessage) {
+            console.warn("Toast component elements not found. Falling back to alert().");
+            alert(`${title}: ${message}`);
+            return;
+        }
+
+        clearTimeout(toastTimeout);
+
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+
+        if (type === 'success') {
+            toastIcon.innerHTML = '✅';
+        } else if (type === 'error') {
+            toastIcon.innerHTML = '❌';
+        } else {
+            toastIcon.innerHTML = 'ℹ️';
+        }
+
+        // Tampilkan toast
+        toast.classList.remove('hidden', 'opacity-0', 'translate-y-64');
+        toast.classList.add('opacity-100', 'translate-y-0');
+
+        // Jadwalkan untuk menyembunyikan toast
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('opacity-100', 'translate-y-0');
+            toast.classList.add('opacity-0', 'translate-y-64');
+            setTimeout(() => toast.classList.add('hidden'), 300);
+        }, 3000);
     }
 </script>

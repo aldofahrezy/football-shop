@@ -1,0 +1,64 @@
+<div id="editModal" class="hidden fixed inset-0 z-50 w-full flex items-center justify-center bg-gray-800 bg-opacity-50">
+  <div id="editModalContent" class="bg-white rounded-lg shadow-lg w-11/12 max-w-lg flex flex-col max-h-[85vh] transform transition-all duration-150 ease-out opacity-0 scale-95">
+    
+    <div class="flex items-center justify-between p-6 border-b flex-shrink-0">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900">
+          Edit Product
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">Update the item details in the shop catalog.</p>
+      </div>
+      <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center" onclick="hideEditModal()">
+        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        <span class="sr-only">Close modal</span>
+      </button>
+    </div>
+
+    <div class="p-6 overflow-y-auto flex-grow">
+      <form id="editProductForm" class="space-y-6">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+          <input type="text" id="name" name="name" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-black focus:border-black" placeholder="e.g., Future 8 Ultimate FG Boots" required>
+        </div>
+        <div>
+          <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
+          <input type="number" id="price" name="price" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-black focus:border-black" placeholder="e.g., 3499000" required>
+        </div>
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+          <textarea id="description" name="description" rows="3" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-black focus:border-black" placeholder="Enter product description" required></textarea>
+        </div>
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+          <select id="category" name="category" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-black focus:border-black" required>
+            <option value="">Choose a category</option>
+            <option value="kits_jerseys">Kits & Jerseys</option>
+            <option value="footwear">Footwear</option>
+            <option value="equipment">Equipment</option>
+            <option value="goalkeeper">Goalkeeper</option>
+            <option value="clothing">Clothing & Apparel</option>
+            <option value="fan_shop">Fan Shop</option>
+            <option value="kids_youth">Kids & Youth</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </div>
+        <div>
+          <label for="thumbnail" class="block text-sm font-medium text-gray-700">Thumbnail URL</label>
+          <input type="url" id="thumbnail" name="thumbnail" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-black focus:border-black" placeholder="https://example.com/image.jpg">
+        </div>
+        <div>
+          <div class="flex items-center">
+            <input id="is_featured" name="is_featured" type="checkbox" class="h-4 w-4 text-black border-gray-300 rounded focus:ring-black">
+            <label for="is_featured" class="ml-2 block text-sm text-gray-900">Featured Product</label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="flex items-center justify-end gap-4 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
+      <button type="button" id="cancelEditButton" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors" onclick="hideEditModal()">Cancel</button>
+      <button type="submit" id="submitEditProduct" form="editProductForm" class="bg-black text-white px-6 py-2 rounded-md font-medium hover:bg-gray-800 transition-colors flex items-center gap-2">Update Product</button>
+    </div>
+
+  </div>
+</div>
