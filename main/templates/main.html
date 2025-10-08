@@ -7,6 +7,7 @@
   data-api-endpoint="{% url 'main:show_json' %}"
   data-product-detail-url-template="{% url 'main:show_product' '00000000-0000-0000-0000-000000000000' %}"
 >
+  <!-- Hero Section -->
   <section class="product-detail" style="align-items: center; padding: 2rem 0; background: transparent; border: none;">
       <div>
         <h1 class="page-title" style="font-size: 2.5rem; line-height: 1.2;">Gear up for the season</h1>
@@ -27,20 +28,39 @@
       </div>
   </section>
 
+  <!-- Product Section -->
   <section id="product-section" style="margin-top: 3rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+    <div 
+      style="display: flex; justify-content: space-between; align-items: center; 
+             margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;"
+    >
       <h2 class="page-title" style="margin: 0;">Featured</h2>
       
-      <div class="actions">
+      <div class="actions" style="display: flex; gap: 0.5rem; align-items: center;">
         {% if user.is_authenticated %}
-          <button type="button" class="btn btn-primary" style="background-color: #111827;" onclick="showProductModal('create')">
-              &#43; Create Product
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            style="background-color: #111827;" 
+            onclick="showProductModal('create')"
+          >
+            &#43; Create Product
           </button>
         {% endif %}
+
+        <button 
+          id="refresh-products" 
+          class="btn btn-secondary" 
+          style="display: flex; align-items: center; gap: 0.4rem;"
+        >
+          Refresh
+        </button>
+
         <a href="{% url 'main:show_main' %}" class="btn btn-secondary">View all</a>
       </div>
     </div>
 
+    <!-- Filters -->
     <div class="filters" style="margin-bottom: 1.5rem;">
       <button id="filter-all" class="btn btn-chip">All Products</button>
       {% if user.is_authenticated %}
@@ -48,6 +68,7 @@
       {% endif %}
     </div>
     
+    <!-- States -->
     <div id="loading" class="hidden" style="text-align: center; padding: 3rem 1rem;">
       <p>Loading products...</p>
     </div>
@@ -59,6 +80,7 @@
       <p>No products to display.</p>
     </div>
 
+    <!-- Product Grid -->
     <div id="grid" class="hidden"></div>
   </section>
 </div>
@@ -66,7 +88,27 @@
 {% endblock content %}
 
 {% block scripts %}
-    {{ block.super }} 
-    <script src="{% static 'js/modal.js' %}"></script>
-    <script src="{% static 'js/main_page.js' %}"></script>
+  {{ block.super }} 
+  <script src="{% static 'js/modal.js' %}"></script>
+  <script src="{% static 'js/main_page.js' %}"></script>
+  <script>
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      const refreshButton = document.getElementById("refresh-products");
+      if (refreshButton) {
+        refreshButton.addEventListener("click", async () => {
+          refreshButton.disabled = true;
+          refreshButton.textContent = "Refreshing...";
+          try {
+            await fetchProductsFromServer(); // fungsi yang sudah ada
+          } catch (error) {
+            console.error("Error refreshing products:", error);
+          } finally {
+            refreshButton.disabled = false;
+            refreshButton.textContent = "Refresh";
+          }
+        });
+      }
+    });
+  </script>
 {% endblock scripts %}
