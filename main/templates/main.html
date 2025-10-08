@@ -29,8 +29,8 @@
       
       <div class="actions">
         {% if user.is_authenticated %}
-          <button type="button" class="btn btn-primary" style="background-color: #111827;" onclick="showModal()">
-            &#43; Create Product
+          <button type="button" class="btn btn-primary" style="background-color: #111827;" onclick="showProductModal('create')">
+              &#43; Create Product
           </button>
         {% endif %}
         <a href="{% url 'main:show_main' %}" class="btn btn-secondary">View all</a>
@@ -60,11 +60,12 @@
 </div>
 
 <script>
-  // Konfigurasi
+  // ===================================================================================
+  // KONFIGURASI & ELEMEN DOM
+  // ===================================================================================
   const PRODUCT_API_ENDPOINT = "{% url 'main:show_json' %}";
   const CURRENT_USER_ID = "{{ user.id|default_if_none:'' }}";
 
-  // Elemen DOM
   const loadingSpinner = document.getElementById('loading');
   const errorMessage = document.getElementById('error');
   const emptyStateDisplay = document.getElementById('empty');
@@ -72,12 +73,16 @@
   const showAllProductsButton = document.getElementById('filter-all');
   const showMyProductsButton = document.getElementById('filter-my');
 
-  // Variabel State
+  // ===================================================================================
+  // STATE MANAGEMENT
+  // ===================================================================================
   let activeFilter = 'all';
   let allProductsData = [];
 
-  // --- FUNGSI HELPER ---
-
+  // ===================================================================================
+  // FUNGSI HELPER
+  // ===================================================================================
+  
   // Fungsi untuk mengambil CSRF token dari cookies
   function getCookie(name) {
     let cookieValue = null;
@@ -119,29 +124,21 @@
     }
   }
 
-  // --- FUNGSI UTAMA UNTUK PRODUK ---
+  // ===================================================================================
+  // FUNGSI UTAMA UNTUK PRODUK
+  // ===================================================================================
 
   // Membuat elemen kartu produk
   function buildProductCardElement(product) {
     const articleElement = document.createElement('div');
     articleElement.className = 'product-card';
-
-    // Membuat URL detail produk menggunakan Django URL resolver
-    const PLACEHOLDER = '00000000-0000-0000-0000-000000000000';
-    const detailLink = `{% url 'main:show_product' '00000000-0000-0000-0000-000000000000' %}`.replace(PLACEHOLDER, product.id);
-
-    // Sanitasi data dari API sebelum ditampilkan
+    const detailLink = `{% url 'main:show_product' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', product.id);
     const productName = DOMPurify.sanitize(product.name);
-    const productThumbnail = DOMPurify.sanitize(product.thumbnail);
     const formattedPrice = `Rp${new Intl.NumberFormat('id-ID').format(product.price)},00`;
+    const thumbnailHtml = product.thumbnail ? `<img src="${DOMPurify.sanitize(product.thumbnail)}" alt="${productName} thumbnail" class="thumb">` : `<div class="thumb-placeholder">No Image</div>`;
 
-    const thumbnailHtml = product.thumbnail
-      ? `<img src="${productThumbnail}" alt="${productName} thumbnail" class="thumb">`
-      : `<div class="thumb-placeholder">No Image</div>`;
-
-    // DIPERBAIKI: Menggunakan product.id, bukan productId yang tidak terdefinisi
     const actionsHtml = CURRENT_USER_ID && Number(CURRENT_USER_ID) === Number(product.user_id)
-      ? `<button onclick="handleEdit('${product.id}')" class="btn btn-outline" style="flex-grow: 1;">Edit</button>
+      ? `<button onclick="openEditModal('${product.id}')" class="btn btn-outline" style="flex-grow: 1;">Edit</button>
          <button onclick="handleDelete('${product.id}')" class="btn btn-danger" style="flex-grow: 1;">Delete</button>`
       : `<a href="#" class="btn btn-primary" style="background-color: #111827; flex-grow: 1;">Add to cart</a>
          <a href="${detailLink}" class="btn btn-secondary">View</a>`;
@@ -169,7 +166,6 @@
   // Memfilter dan menampilkan produk berdasarkan state
   function filterAndDisplayProducts() {
     updateFilterButtonsAppearance();
-
     const filteredProducts = activeFilter === 'all'
       ? allProductsData
       : allProductsData.filter(product => Number(product.user_id) === Number(CURRENT_USER_ID));
@@ -186,13 +182,10 @@
   async function fetchProductsFromServer() {
     try {
       displayPageSection({ showLoading: true });
-
       const response = await fetch(PRODUCT_API_ENDPOINT);
       if (!response.ok) throw new Error('Failed to fetch data from server');
-
       const productData = await response.json();
       allProductsData = productData || [];
-
       filterAndDisplayProducts();
     } catch (error) {
       console.error('Error loading products:', error);
@@ -200,15 +193,15 @@
     }
   }
 
-
-  // --- FUNGSI UNTUK AKSI CUD (Create, Update, Delete) ---
+  // ===================================================================================
+  // FUNGSI UNTUK AKSI CUD (Create, Update, Delete)
+  // ===================================================================================
 
   // Fungsi untuk menangani aksi delete
   async function handleDelete(productId) {
     if (!confirm('Are you sure you want to delete this product?')) {
       return;
     }
-
     try {
       const response = await fetch(`/delete-product-ajax/${productId}/`, {
         method: 'POST',
@@ -228,41 +221,26 @@
     }
   }
 
-  // Fungsi untuk menangani aksi edit (mengambil data dan membuka modal)
-  async function handleEdit(productId) {
+  // Fungsi untuk membuka modal edit
+  async function openEditModal(productId) {
     try {
-      // DIPERBAIKI: URL disesuaikan dengan urls.py -> /json/<id>/
       const response = await fetch(`/json/${productId}/`);
       if (!response.ok) throw new Error('Failed to fetch product data.');
+      
+      const productData = await response.json();
+      
+      // Memanggil fungsi global dari modal.js
+      showProductModal('edit', productData);
 
-      const product = await response.json();
-      const editForm = document.getElementById('editProductForm');
-
-      // Cek jika form edit ada
-      if(!editForm) {
-        console.error('Edit form with id "editProductForm" not found!');
-        return;
-      }
-
-      // Isi form di dalam modal edit dengan data
-      editForm.querySelector('[name="name"]').value = product.name;
-      editForm.querySelector('[name="price"]').value = product.price;
-      editForm.querySelector('[name="description"]').value = product.description;
-      editForm.querySelector('[name="category"]').value = product.category;
-      editForm.querySelector('[name="thumbnail"]').value = product.thumbnail;
-      editForm.querySelector('[name="is_featured"]').checked = product.is_featured;
-
-      // Simpan ID produk di form agar bisa digunakan saat submit
-      editForm.setAttribute('data-product-id', productId);
-
-      showEditModal();
     } catch (error) {
-      console.error('Edit error:', error);
-      showToast('Error!', 'Could not load product data for editing.', 'error');
+      console.error('Error opening edit modal:', error);
+      showToast('Error', 'Could not load product data for editing.', 'error');
     }
   }
 
-  // --- INISIALISASI HALAMAN ---
+  // ===================================================================================
+  // INISIALISASI HALAMAN
+  // ===================================================================================
 
   function initializeProductsPage() {
     // Event listener untuk tombol filter
@@ -279,49 +257,17 @@
       });
     }
 
-    // Logika untuk men-submit form edit
-    const editForm = document.getElementById('editProductForm');
-    if (editForm) {
-      editForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const productId = editForm.getAttribute('data-product-id');
-        if (!productId) return;
-
-        const formData = new FormData(editForm);
-
-        try {
-          const response = await fetch(`/edit-product-ajax/${productId}/`, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRFToken': getCookie('csrftoken') }
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            hideEditModal();
-            showToast('Success!', data.message, 'success');
-            fetchProductsFromServer();
-          } else {
-            const errorMessage = data.errors ? JSON.stringify(data.errors) : (data.message || 'Update failed.');
-            showToast('Update Failed', errorMessage, 'error');
-          }
-        } catch (error) {
-          console.error('Submit edit error:', error);
-          showToast('Error!', 'An unexpected network error occurred.', 'error');
-        }
-      });
-    }
-
     // Memuat produk saat halaman pertama kali dibuka
     fetchProductsFromServer();
 
-    // Dengarkan event kustom setelah produk berhasil DIBUAT
-    document.addEventListener('productAdded', function() {
-      // console.log('ProductAdded event detected! Refreshing product list...');
+    // Event ini akan aktif setelah produk berhasil DIBUAT atau DIEDIT.
+    document.addEventListener('productDataChanged', function(event) {
+      console.log('Product data changed! Refreshing product list...', event.detail);
       fetchProductsFromServer();
     });
   }
 
+  // Jalankan inisialisasi
   initializeProductsPage();
 </script>
 {% endblock content %}

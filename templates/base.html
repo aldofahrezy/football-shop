@@ -2,7 +2,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
     <head>
-        <!-- Metadata/Konfigurasi -->
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -24,69 +23,19 @@
         </main>
         
         {% include 'toast.html' %}    
-        {% include 'modals/create_modal.html' %}    
-        {% include 'modals/edit_modal.html' %}    
-        {% include 'partials/footer.html' %} 
+        {% include 'modals/modal.html' %} {% include 'partials/footer.html' %} 
 
         <script>
-            // Script untuk toggle menu hamburger
+            // Script untuk toggle menu hamburger (bisa tetap di sini)
             document.getElementById('hamburger-btn').addEventListener('click', function() {
                 document.getElementById('mobile-menu').classList.toggle('show');
             });
-
-            // --- FUNGSI GLOBAL UNTUK KONTROL MODAL ---
-            function showModal() {
-                // Menggunakan animasi dari create_modal.html
-                const modal = document.getElementById('crudModal');
-                const modalContent = document.getElementById('crudModalContent');
-                if (!modal || !modalContent) return;
-                
-                modal.classList.remove('hidden'); 
-                setTimeout(() => {
-                    modalContent.classList.remove('opacity-0', 'scale-95');
-                    modalContent.classList.add('opacity-100', 'scale-100');
-                }, 10);
-            }
-
-            function hideModal() {
-                const modal = document.getElementById('crudModal');
-                const modalContent = document.getElementById('crudModalContent');
-                if (!modal || !modalContent) return;
-
-                document.getElementById('productForm')?.reset();
-
-                modalContent.classList.remove('opacity-100', 'scale-100');
-                modalContent.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 150); 
-            }
-
-            function showEditModal() {
-                const modal = document.getElementById('editModal');
-                const modalContent = document.getElementById('editModalContent');
-                if (!modal || !modalContent) return;
-
-                modal.classList.remove('hidden'); 
-                setTimeout(() => {
-                    modalContent.classList.remove('opacity-0', 'scale-95');
-                    modalContent.classList.add('opacity-100', 'scale-100');
-                }, 10);
-            }
-
-            function hideEditModal() {
-                const modal = document.getElementById('editModal');
-                const modalContent = document.getElementById('editModalContent');
-                if (!modal || !modalContent) return;
-
-                document.getElementById('editProductForm')?.reset();
-
-                modalContent.classList.remove('opacity-100', 'scale-100');
-                modalContent.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 150);
-            }
         </script>
+
+        {% block scripts %}
+            <script src="{% static 'js/toast.js' %}"></script>
+            <script src="{% static 'js/modal.js' %}"></script>
+        {% endblock scripts %}
+
     </body>
 </html>
