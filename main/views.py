@@ -143,6 +143,10 @@ def register(request):
   return render(request, 'register.html', context)
 
 def login_user(request):
+
+  if request.user.is_authenticated:
+    return redirect('main:show_main')
+  
   if request.method == 'POST':
     form = AuthenticationForm(data=request.POST)
 
@@ -241,4 +245,27 @@ def delete_product_ajax(request, id):
       return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
   # Jika method bukan POST
+  return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+def register_ajax(request):
+  if request.method == 'POST':
+    form = UserCreationForm(data=request.POST)
+    if form.is_valid():
+      form.save()
+      return JsonResponse({'status': 'success', 'message': 'Registration successful! Please log in.'}, status=201)
+    else:
+      # Mengembalikan error validasi form dalam format JSON
+      return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+  return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+def login_ajax(request):
+  if request.method == 'POST':
+    form = AuthenticationForm(data=request.POST)
+    if form.is_valid():
+      user = form.get_user()
+      login(request, user)
+      return JsonResponse({'status': 'success', 'message': 'Login successful! Redirecting...'}, status=200)
+    else:
+      # Mengembalikan error validasi form dalam format JSON
+      return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

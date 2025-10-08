@@ -12,29 +12,34 @@
         {% block meta %} {% endblock meta %}
     </head>
 
-    <body class="bg-gray-50 font-sans antialiased">
+    <body class="bg-gray-50 font-sans antialiased" data-user-id="{{ user.id|default_if_none:'' }}">
+        
         {% block navbar %}
             {% include 'partials/navbar.html' %}
         {% endblock navbar %}
 
-        <!-- Content/Komponen -->
         <main>
             {% block content %} {% endblock content %}
         </main>
         
         {% include 'toast.html' %}    
-        {% include 'modals/modal.html' %} {% include 'partials/footer.html' %} 
+        {% include 'modals/modal.html' %} 
+        {% include 'partials/footer.html' %} 
 
         <script>
-            // Script untuk toggle menu hamburger (bisa tetap di sini)
-            document.getElementById('hamburger-btn').addEventListener('click', function() {
-                document.getElementById('mobile-menu').classList.toggle('show');
-            });
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function() {
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (mobileMenu) {
+                        mobileMenu.classList.toggle('show');
+                    }
+                });
+            }
         </script>
 
         {% block scripts %}
             <script src="{% static 'js/toast.js' %}"></script>
-            <script src="{% static 'js/modal.js' %}"></script>
         {% endblock scripts %}
 
     </body>

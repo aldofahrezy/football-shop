@@ -2,45 +2,120 @@
 {% load static %}
 
 {% block navbar %}
-  {% endblock navbar %}
+  {% comment %} Navbar sengaja dikosongkan di halaman auth {% endcomment %}
+{% endblock navbar %}
 
 {% block content %}
 <div class="auth-page-wrapper">
   
   <div class="auth-image-panel"></div>
 
-  <div class="auth-form-panel">
-    <div style="width: 100%; max-width: 450px;">
-        <h1 class="auth-title">Welcome Back</h1>
-        <p class="auth-subtitle">Please enter your details to login.</p>
+  <div class="auth-form-panel" style="position: relative;">
+    
+    <div id="login-container" style="width: 100%; max-width: 450px;">
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Please enter your details to login.</p>
 
-        <form method="POST" action="">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="{{ form.username.id_for_label }}">Username</label>
-                {{ form.username }}
-            </div>
+      <form id="login-form" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="{{ form.username.id_for_label }}">Username</label>
+          {{ form.username }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.password.id_for_label }}">Password</label>
+          {{ form.password }}
+        </div>
+        <div id="form-error-message" class="error-message" style="color: #ef4444; font-size: 0.875rem; margin-bottom: 1rem; text-align: center;"></div>
+        <button id="submit-button" class="btn btn-primary" type="submit" style="width: 100%; padding: 0.75rem;">Login</button>
+      </form>
+      
+      <p class="muted" style="margin-top: 1.5rem; text-align: center;">
+        Don't have an account yet? <a href="{% url 'main:register' %}" class="link">Register Now</a>
+      </p>
+    </div>
 
-            <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">Password</label>
-                {{ form.password }}
-            </div>
-            
-            <button class="btn btn-primary" type="submit" style="width: 100%; padding: 0.75rem;">Login</button>
-        </form>
-        
-        <p class="muted" style="margin-top: 1.5rem; text-align: center;">
-          Don't have an account yet? <a href="{% url 'main:register' %}" class="link">Register Now</a>
-        </p>
+    <div id="redirect-overlay" class="hidden" style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1rem;">
+      <svg class="animate-spin h-8 w-8 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="auth-subtitle">Redirecting...</p>
     </div>
-    </div>
+  </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Styling input
     document.querySelector('#id_username').classList.add('form-input');
     document.querySelector('#id_password').classList.add('form-input');
+
+    // Mengambil elemen-elemen DOM
+    const loginForm = document.getElementById('login-form');
+    const loginContainer = document.getElementById('login-container');
+    const submitButton = document.getElementById('submit-button');
+    const formErrorMessage = document.getElementById('form-error-message');
+    const redirectOverlay = document.getElementById('redirect-overlay');
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Mencegah reload halaman
+        formErrorMessage.innerHTML = '';
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Logging in...';
+
+        const formData = new FormData(loginForm);
+
+        try {
+          const response = await fetch("{% url 'main:login_ajax' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { "X-CSRFToken": getCookie('csrftoken') }
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            // ---> BARIS-BARIS INI HANYA BOLEH DIJALANKAN SETELAH LOGIN SUKSES <---
+            loginContainer.style.display = 'none';      // Sembunyikan form
+            redirectOverlay.classList.remove('hidden'); // Tampilkan overlay
+            showToast('Success!', data.message, 'success');
+            setTimeout(() => {
+              window.location.href = "{% url 'main:show_main' %}";
+            }, 800);
+          } else {
+            const errorMessage = data.errors.__all__ ? data.errors.__all__[0] : 'An unknown error occurred.';
+            showToast('Login Failed', errorMessage, 'error');
+            formErrorMessage.innerHTML = errorMessage;
+            // Kembalikan tombol jika login gagal
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+          }
+        } catch (error) {
+          console.error('An error occurred:', error);
+          showToast('Error!', 'An unexpected network error occurred.', 'error');
+          // Kembalikan tombol jika terjadi error jaringan
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+        }
+      });
+    }
   });
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 </script>
 {% endblock content %}

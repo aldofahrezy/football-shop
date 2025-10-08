@@ -5,7 +5,8 @@ from main.views import (
     show_main, create_product, show_product, show_xml, show_json, 
     show_xml_by_id, show_json_by_id, register, login_user, logout_user, 
     edit_product, delete_product, create_product_ajax, 
-    edit_product_ajax, delete_product_ajax
+    edit_product_ajax, delete_product_ajax,
+    login_ajax, register_ajax,
 )
 
 app_name = 'main'
@@ -32,4 +33,8 @@ urlpatterns = [
     path('create-product-ajax/', create_product_ajax, name='create_product_ajax'),
     path('edit-product-ajax/<uuid:id>/', edit_product_ajax, name='edit_product_ajax'),
     path('delete-product-ajax/<uuid:id>/', delete_product_ajax, name='delete_product_ajax'),
+
+    # --- URL untuk Aksi AJAX LOGIN dan REGISTER ---
+    path('register-ajax/', register_ajax, name='register_ajax'),
+    path('login-ajax/', login_ajax, name='login_ajax'),
 ]

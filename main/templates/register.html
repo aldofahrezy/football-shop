@@ -1,59 +1,122 @@
 {% extends 'base.html' %}
 
 {% block navbar %}
-  {% endblock navbar %}
+  {% comment %} Navbar sengaja dikosongkan di halaman auth {% endcomment %}
+{% endblock navbar %}
 
 {% block content %}
 <div class="auth-page-wrapper">
   
   <div class="auth-image-panel"></div>
 
-  <div class="auth-form-panel">
+  <div class="auth-form-panel" style="position: relative;">
     <section class="auth-card" style="margin: 0;">
       <h1 class="auth-title">Create an Account</h1>
       <p class="auth-subtitle">Join us and start your journey!</p>
 
-      <form method="POST">
-          {% csrf_token %}
-          
-          {% for field in form %}
-          <div class="form-group">
-              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              
-              {% if field.errors %}
-                <div class="muted small" style="color: #ef4444; margin-top: 0.25rem;">
-                  {{ field.errors.as_text }}
-                </div>
-              {% endif %}
-          </div>
-          {% endfor %}
-
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Create Account</button>
-      </form>
-
-      {% if messages %}
-      <div class="messages" style="margin-top: 1rem;">
-        {% for message in messages %}
-        <div class="message">{{ message }}</div>
+      <form id="register-form" method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          <div class="error-message" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+        </div>
         {% endfor %}
-      </div>
-      {% endif %}
+        <button id="submit-button" type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Create Account</button>
+      </form>
 
       <p class="muted" style="margin-top: 1.5rem; text-align: center;">
         Already have an account? <a href="{% url 'main:login' %}" class="link">Login here</a>
       </p>
     </section>
+
+    <div id="redirect-overlay" class="hidden" style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1rem;">
+      <svg class="animate-spin h-8 w-8 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="auth-subtitle">Redirecting to Login...</p>
+    </div>
   </div>
 </div>
 
 <script>
-  // Script untuk menambahkan kelas CSS ke semua input form Django
   document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('form input:not([type="submit"]), form select');
-    inputs.forEach(input => {
-      input.classList.add('form-input');
-    });
+    inputs.forEach(input => input.classList.add('form-input'));
+
+    const registerForm = document.getElementById('register-form');
+    const submitButton = document.getElementById('submit-button');
+    const redirectOverlay = document.getElementById('redirect-overlay');
+
+    if (registerForm) {
+      registerForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        document.querySelectorAll('.error-message').forEach(el => el.innerHTML = '');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Creating Account...';
+
+        const formData = new FormData(registerForm);
+
+        try {
+          const response = await fetch("{% url 'main:register_ajax' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { "X-CSRFToken": getCookie('csrftoken') }
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            // MODIFIKASI: Tampilkan overlay saat sukses
+            document.querySelector('.auth-card').style.display = 'none';
+            redirectOverlay.classList.remove('hidden');
+
+            showToast('Success!', data.message, 'success');
+            
+            // Timeout dipersingkat
+            setTimeout(() => {
+              window.location.href = "{% url 'main:login' %}";
+            }, 1000);
+          } else {
+            showToast('Registration Failed', 'Please check the form for errors.', 'error');
+            for (const fieldName in data.errors) {
+              const field = registerForm.querySelector(`[name="${fieldName}"]`);
+              if (field) {
+                const errorContainer = field.closest('.form-group').querySelector('.error-message');
+                if (errorContainer) errorContainer.innerHTML = data.errors[fieldName][0];
+              }
+            }
+            if (data.errors.__all__) showToast('Error', data.errors.__all__[0], 'error');
+            // Kembalikan tombol jika gagal
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+          }
+        } catch (error) {
+          console.error('An error occurred:', error);
+          showToast('Error!', 'An unexpected network error occurred.', 'error');
+          // Kembalikan tombol jika gagal
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+        }
+      });
+    }
   });
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 </script>
 {% endblock content %}

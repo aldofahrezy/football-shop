@@ -474,3 +474,23 @@ main {
     font-weight: 600;
   }
 }
+
+/* Utility untuk menyembunyikan elemen (fix overlay selalu muncul) */
+.hidden {
+  display: none !important;
+}
+
+/* Link highlight effect */
+.link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 1px;
+}
+
+.link:hover {
+  color: var(--color-accent); /* atau var(--color-primary) kalau mau tetap hitam */
+  border-bottom-color: var(--color-accent);
+}
