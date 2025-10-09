@@ -64,9 +64,10 @@ def edit_product(request, id):
   form = ProductForm(request.POST or None, instance=product)
   if form.is_valid() and request.method == 'POST':
     form.save()
-    return redirect('main:show_main')
+    return redirect('main:show_product', id=id)
 
   context = {
+    'product': product,
     'form': form
   }
 

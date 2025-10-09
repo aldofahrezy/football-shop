@@ -1,120 +1,177 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load humanize %}
 
 {% block content %}
-<div class="container">
+<div class="container mx-auto px-4 py-12">
   
-  <p style="margin: 1rem 0;">
-    <a href="{% url 'main:show_main' %}" class="link">← Back to Products</a>
-  </p>
+  <a href="{% url 'main:show_main' %}" class="inline-flex items-center gap-2 mb-8 text-gray-600 hover:text-gray-900 transition-colors">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+    </svg>
+    Back to Products
+  </a>
 
-  <div id="loading-state" class="hidden" style="text-align: center; padding: 5rem 0;">Loading...</div>
-  <div id="error-state" class="hidden" style="text-align: center; padding: 5rem 0; color: red;">Failed to load product details.</div>
+  <div id="loading-state" class="hidden text-center py-20">Loading product details...</div>
+  <div id="error-state" class="hidden text-center py-20 text-red-600">Failed to load product details. Please try again.</div>
 
-  <div id="product-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-top: 1rem;">
+  <div id="product-content" class="grid md:grid-cols-2 gap-12 lg:gap-16 hidden">
     
-    <div id="product-image-container">
-      {% if product.thumbnail %}
-        <img id="product-image" src="{{ product.thumbnail }}" alt="{{ product.name }} thumbnail" class="detail-thumb" style="max-height: 550px;">
-      {% else %}
-        <div class="detail-thumb placeholder">No Image</div>
-      {% endif %}
-    </div>
+    <div id="product-image-container"></div>
 
-    <div style="padding-top: 1rem;">
-      <h1 id="product-name" class="page-title" style="margin-bottom: 0.25rem;">{{ product.name }}</h1>
-      <p id="product-price" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
-        Rp{{ product.price|intcomma }}
-      </p>
-      
-      <p id="product-description" class="muted">{{ product.description }}</p>
-      
-      <p id="product-author" class="muted small" style="margin-top: 1rem;"></p>
+    <div class="flex flex-col">
+      <h1 id="product-name" class="text-4xl font-bold tracking-tight text-gray-900"></h1>
+      <p id="product-price" class="text-3xl mt-4 text-gray-800"></p>
+      <div id="product-description" class="mt-6 prose max-w-none text-gray-600"></div>
+      <p id="product-author" class="mt-6 text-sm text-gray-500"></p>
 
-      <div class="detail-actions" style="margin: 1.5rem 0;">
-        <a href="#" class="btn btn-primary" style="background-color: #111827;">Add to cart</a>
-        <a href="#" class="btn btn-secondary">Wishlist</a>
-      </div>
+      <div id="product-actions" class="flex items-center gap-4 mt-6"></div>
 
-      <ul class="muted small" style="list-style-type: disc; padding-left: 1.25rem;">
-        <li>Free shipping on orders over Rp500.000</li>
-        <li>30-day returns</li>
-        <li>2-year limited warranty</li>
+      <ul class="mt-8 text-sm text-gray-500 space-y-2">
+        <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Free shipping on orders over Rp500.000
+        </li>
+        <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            30-day returns
+        </li>
+        <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            2-year limited warranty
+        </li>
       </ul>
     </div>
   </div>
-
 </div>
 
 <script>
-// Konfigurasi
+// --- KONFIGURASI DAN ELEMEN DOM ---
 const PRODUCT_ID = "{{ product.id }}";
 const PRODUCT_DETAIL_ENDPOINT = `{% url 'main:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', PRODUCT_ID);
+const EDIT_URL_TEMPLATE = `{% url 'main:edit_product' '00000000-0000-0000-0000-000000000000' %}`;
+const CURRENT_USER_ID = document.body.dataset.userId || '';
 
-// Elemen DOM
 const loadingState = document.getElementById('loading-state');
 const errorState = document.getElementById('error-state');
 const productContent = document.getElementById('product-content');
-
 const productName = document.getElementById('product-name');
 const productPrice = document.getElementById('product-price');
 const productDescription = document.getElementById('product-description');
 const productImageContainer = document.getElementById('product-image-container');
 const productAuthor = document.getElementById('product-author');
+const productActions = document.getElementById('product-actions');
 
-// Menampilkan state halaman (loading, error, atau ready)
+// --- FUNGSI UNTUK TOMBOL AKSI (Edit/Delete) ---
+// Fungsi-fungsi ini sekarang ada di sini agar bisa dipanggil oleh `onclick`
+window.handleDelete = async function(event, productId) {
+    const deleteButton = event.target;
+    const originalButtonText = deleteButton.innerHTML;
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = 'Loading...';
+    try {
+        const response = await fetch(`/json/${productId}/`);
+        if (!response.ok) throw new Error('Failed to fetch product data for deletion.');
+        const productData = await response.json();
+        if (typeof showProductModal === 'function' && productData.name) {
+           showProductModal('delete', productData);
+        } else {
+           throw new Error('Could not prepare delete confirmation.');
+        }
+    } catch (error) {
+        console.error('Error opening delete modal:', error);
+        showToast('Error', 'Could not load product data for deletion.', 'error');
+    } finally {
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = originalButtonText;
+        }
+    }
+}
+
+window.openEditModal = async function(event, productId) {
+    // Fungsi ini tidak terpakai di halaman ini, tapi disertakan untuk konsistensi
+    // Jika Anda ingin tombol Edit juga memakai modal AJAX, panggil fungsi ini
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// --- LOGIKA UTAMA HALAMAN ---
 function showState(state) {
     loadingState.classList.toggle('hidden', state !== 'loading');
     errorState.classList.toggle('hidden', state !== 'error');
-    // Konten produk disembunyikan hanya jika loading atau error
     productContent.classList.toggle('hidden', state !== 'ready');
 }
 
-// Merender konten produk dengan data dari JSON
 function renderProduct(product) {
-    // Set judul, harga, dan deskripsi
+    document.title = `${product.name} - The Kickoff Zone`;
     productName.textContent = product.name;
     productDescription.textContent = product.description;
-    document.title = `${product.name} - The Kickoff Zone`;
+    productPrice.textContent = `Rp${new Intl.NumberFormat('id-ID').format(product.price)}`;
+    productAuthor.textContent = `Sold by: ${product.user_username || 'Unknown Seller'}`;
 
-    const formattedPrice = `Rp${new Intl.NumberFormat('en-US').format(product.price)}`;
-    productPrice.textContent = formattedPrice;
-
-    // Set gambar
     if (product.thumbnail) {
-        productImageContainer.innerHTML = `<img id="product-image" src="${product.thumbnail}" alt="${product.name} thumbnail" class="detail-thumb" style="max-height: 550px;">`;
+        productImageContainer.innerHTML = `<img src="${product.thumbnail}" alt="${product.name}" class="w-full h-auto object-cover rounded-lg shadow-lg border border-gray-200">`;
     } else {
-        productImageContainer.innerHTML = `<div class="detail-thumb placeholder">No Image</div>`;
+        productImageContainer.innerHTML = `<div class="w-full h-96 bg-gray-200 flex items-center justify-center text-gray-500 rounded-lg">No Image</div>`;
     }
 
-    // Set author
-    const authorName = product.user_username || 'Unknown Seller';
-    productAuthor.textContent = `Sold by: ${authorName}`;
+    let actionsHtml = '';
+    if (CURRENT_USER_ID && Number(CURRENT_USER_ID) === Number(product.user_id)) {
+        const editUrl = EDIT_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', product.id);
+        actionsHtml = `
+            <a href="${editUrl}" class="btn btn-primary" style="flex-grow: 1;">
+                Edit Product
+            </a>
+            <button onclick="handleDelete(event, '${product.id}')" class="btn btn-danger" style="flex-grow: 1;">
+                Delete Product
+            </button>
+        `;
+    } else {
+        actionsHtml = `
+            <button class="btn btn-primary" style="flex-grow: 1;">
+                Add to cart
+            </button>
+            <button class="btn btn-secondary" style="flex-grow: 1;">
+                Wishlist
+            </button>
+        `;
+    }
+    productActions.innerHTML = actionsHtml;
 }
 
-// Mengambil data detail produk dari API
 async function loadProductDetail() {
-    // Sembunyikan konten awal dan tunjukkan loading
-    // Ini akan terjadi sangat cepat sehingga mungkin tidak terlihat
     showState('loading');
     try {
         const response = await fetch(PRODUCT_DETAIL_ENDPOINT);
-
-        if (!response.ok) {
-            throw new Error('Product not found');
-        }
-
+        if (!response.ok) throw new Error('Product not found');
         const productData = await response.json();
-        renderProduct(productData); // Panggil fungsi render
-        showState('ready'); // Tampilkan konten setelah data siap
-
+        renderProduct(productData);
+        showState('ready');
     } catch (error) {
         console.error('Error loading product detail:', error);
-        showState('error'); // Tampilkan pesan error jika gagal
+        showState('error');
     }
 }
 
-// Memulai proses saat halaman dimuat
 document.addEventListener('DOMContentLoaded', loadProductDetail);
 </script>
 {% endblock content %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script src="{% static 'js/modal.js' %}"></script>
+    {% endblock scripts %}

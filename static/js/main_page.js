@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let allProductsData = [];
 
   // ===================================================================================
-  // FUNGSI HELPER (hanya getCookie yang dibutuhkan di sini)
+  // FUNGSI HELPER
   // ===================================================================================
   
   function getCookie(name) {
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
-    if (!loadingSpinner) return; // Tambahkan pengecekan
+    if (!loadingSpinner) return;
     loadingSpinner.classList.toggle('hidden', !showLoading);
     errorMessage.classList.toggle('hidden', !showError);
     emptyStateDisplay.classList.toggle('hidden', !showEmpty);
@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // 👇 DAN DI SINI 👇
   window.openEditModal = async function(event, productId) {
     const editButton = event.target;
     const originalButtonText = editButton.innerHTML;
