@@ -6,7 +6,8 @@ from main.views import (
     show_xml_by_id, show_json_by_id, register, login_user, logout_user, 
     edit_product, delete_product, create_product_ajax, 
     edit_product_ajax, delete_product_ajax,
-    login_ajax, register_ajax,
+    login_ajax, register_ajax, 
+    show_user_products_list
 )
 
 app_name = 'main'
@@ -37,4 +38,7 @@ urlpatterns = [
     # --- URL untuk Aksi AJAX LOGIN dan REGISTER ---
     path('register-ajax/', register_ajax, name='register_ajax'),
     path('login-ajax/', login_ajax, name='login_ajax'),
+
+    # --- Flutter integration ---
+    path('products/user/<int:user_id>', show_user_products_list, name='show_user_products_list'),
 ]

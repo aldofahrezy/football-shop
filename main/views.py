@@ -36,6 +36,7 @@ def show_main(request):
 
   return render(request, "main.html", context)
 
+@login_required(login_url='/login')
 def create_product(request):
   form = ProductForm(request.POST or None)
 
@@ -178,15 +179,12 @@ def logout_user(request):
 def create_product_ajax(request):
   # Pengganti decorator @require_POST
   if request.method == 'POST':
-    # Gunakan ProductForm untuk validasi dan keamanan otomatis
     form = ProductForm(request.POST)
     if form.is_valid():
-      # Simpan produk dan hubungkan dengan user yang sedang login
       product = form.save(commit=False)
       product.user = request.user
       product.save()
-      
-      # Siapkan data JSON dari produk yang baru dibuat
+
       new_product_data = {
         'id': str(product.id),
         'name': product.name,
@@ -196,45 +194,35 @@ def create_product_ajax(request):
         'user_id': product.user.id,
       }
 
-      # 4. Kembalikan data produk baru sebagai JSON dengan status 201 (Created)
       return JsonResponse({'status': 'success', 'product': new_product_data}, status=201)
     else:
-      # 5. Jika form tidak valid, kembalikan pesan error sebagai JSON
       return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-        
-  # Jika method bukan POST, kembalikan error
+
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @login_required(login_url='/login')
 def edit_product_ajax(request, id):
-  # Pastikan request adalah POST
+
   if request.method == 'POST':
-    # Dapatkan produk yang akan di-edit, atau 404 jika tidak ada
     product = get_object_or_404(Product, pk=id)
     
-    # PENTING: Pastikan hanya pemilik produk yang bisa mengedit
     if product.user != request.user:
       return JsonResponse({'status': 'error', 'message': 'You are not authorized to edit this product.'}, status=403) # 403 Forbidden
 
-    # Bind form dengan data dari request dan instance produk yang ada
     form = ProductForm(request.POST, instance=product)
     if form.is_valid():
       form.save()
       return JsonResponse({'status': 'success', 'message': 'Product updated successfully.'}, status=200)
     else:
-      # Jika form tidak valid, kembalikan errors
       return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-    
-  # Jika method bukan POST
+
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @login_required(login_url='/login')
 def delete_product_ajax(request, id):
-  # Pastikan request adalah POST untuk keamanan (mencegah penghapusan via GET)
   if request.method == 'POST':
     product = get_object_or_404(Product, pk=id)
     
-    # PENTING: Pastikan hanya pemilik produk yang bisa menghapus
     if product.user != request.user:
       return JsonResponse({'status': 'error', 'message': 'You are not authorized to delete this product.'}, status=403)
 
@@ -242,10 +230,8 @@ def delete_product_ajax(request, id):
       product.delete()
       return JsonResponse({'status': 'success', 'message': 'Product deleted successfully.'}, status=200)
     except Exception as e:
-      # Menangani jika ada error saat proses hapus di database
       return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-  # Jika method bukan POST
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 def register_ajax(request):
@@ -255,7 +241,6 @@ def register_ajax(request):
       form.save()
       return JsonResponse({'status': 'success', 'message': 'Registration successful! Please log in.'}, status=201)
     else:
-      # Mengembalikan error validasi form dalam format JSON
       return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
@@ -267,6 +252,5 @@ def login_ajax(request):
       login(request, user)
       return JsonResponse({'status': 'success', 'message': 'Login successful! Redirecting...'}, status=200)
     else:
-      # Mengembalikan error validasi form dalam format JSON
       return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
   return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

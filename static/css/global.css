@@ -99,6 +99,16 @@ main {
   margin-top: 2rem;
   padding: 1rem 0;
 }
+@media (max-width: 640px) {
+  .site-footer .container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  .site-footer .nav-links {
+    justify-content: center;
+  }
+}
 
 /* Buttons */
 .btn {
