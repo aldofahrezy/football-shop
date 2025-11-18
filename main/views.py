@@ -1,4 +1,5 @@
 import datetime
+import requests
 from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.core import serializers
@@ -7,9 +8,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
-# from django.views.decorators.csrf import csrf_exempt
-# from django.views.decorators.http import require_POST 
-# from django.utils.html import strip_tags
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.utils.html import strip_tags
+import json
 
 from main.forms import ProductForm
 from main.models import Product
@@ -251,6 +253,69 @@ def login_ajax(request):
       user = form.get_user()
       login(request, user)
       return JsonResponse({'status': 'success', 'message': 'Login successful! Redirecting...'}, status=200)
+
+def show_user_products_list(request, user_id):
+    try:
+        user = get_object_or_404(User, pk=user_id)
+        products = Product.objects.filter(user=user)
+        data = [
+            {
+                'id': str(product.id),
+                'name': product.name,
+                'description': product.description,
+                'category': product.category,
+                'price': product.price,
+                'thumbnail': product.thumbnail,
+                'product_views': product.product_views,
+                'created_at': product.created_at.isoformat() if product.created_at else None,
+                'is_featured': product.is_featured,
+                'user_id': product.user_id,
+            }
+            for product in products
+        ]
+        return JsonResponse(data, safe=False)
+    except User.DoesNotExist:
+        return JsonResponse({'detail': 'User not found'}, status=404)
+
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        title = strip_tags(data.get("name", ""))  # Strip HTML tags
+        content = strip_tags(data.get("description", ""))  # Strip HTML tags
+        category = data.get("category", "")
+        thumbnail = data.get("thumbnail", "")
+        is_featured = data.get("is_featured", False)
+        user = request.user
+
+        new_product = Product(
+            name=title,
+            description=content,
+            category=category,
+            thumbnail=thumbnail,
+            is_featured=is_featured,
+            user=user
+        )
+        new_product.save()
+
+        return JsonResponse({"status": "success"}, status=200)
     else:
-      return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-  return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+        return JsonResponse({"status": "error"}, status=401)
+
+def proxy_image(request):
+    image_url = request.GET.get('url')
+    if not image_url:
+        return HttpResponse('No URL provided', status=400)
+
+    try:
+        # Fetch image from external source
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+
+        # Return the image with proper content type
+        return HttpResponse(
+            response.content,
+            content_type=response.headers.get('Content-Type', 'image/jpeg')
+        )
+    except requests.RequestException as e:
+        return HttpResponse(f'Error fetching image: {str(e)}', status=500)

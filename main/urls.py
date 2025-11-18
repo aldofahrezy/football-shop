@@ -2,12 +2,12 @@
 
 from django.urls import path
 from main.views import (
-    show_main, create_product, show_product, show_xml, show_json, 
-    show_xml_by_id, show_json_by_id, register, login_user, logout_user, 
-    edit_product, delete_product, create_product_ajax, 
+    show_main, create_product, show_product, show_xml, show_json,
+    show_xml_by_id, show_json_by_id, register, login_user, logout_user,
+    edit_product, delete_product, create_product_ajax,
     edit_product_ajax, delete_product_ajax,
-    login_ajax, register_ajax, 
-    show_user_products_list
+    login_ajax, register_ajax,
+    show_user_products_list, create_product_flutter, proxy_image
 )
 
 app_name = 'main'
@@ -41,4 +41,6 @@ urlpatterns = [
 
     # --- Flutter integration ---
     path('products/user/<int:user_id>', show_user_products_list, name='show_user_products_list'),
+    path('create-flutter/', create_product_flutter, name='create_product_flutter'),
+    path('proxy-image/', proxy_image, name='proxy_image'),
 ]
